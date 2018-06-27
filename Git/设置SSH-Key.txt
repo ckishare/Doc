@@ -1,0 +1,26 @@
+第一步： 生成密钥
+
+ssh-keygen -t rsa -C "qisheng.ishare@outlook.com"
+
+然后设置密码，根据提示会得到密钥
+
+id_rsa 文件是私有密钥
+id_rsa.pub 是公开密钥
+
+一般保存在家目录中
+
+
+第二步：添加公开密钥
+
+在GitHub中的设置中添加SSH Key,添加完成后会收到一封提示“公共密钥添加完成”的邮件
+
+
+第三步：测试是否成功
+
+ssh -T git@github.com 
+
+出现如下结果即为成功
+Hi ckishare! You've successfully authenticated, but GitHub does not provide shell access.
+
+
+
