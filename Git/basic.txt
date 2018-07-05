@@ -1,0 +1,3 @@
+git branch --set-upstream-to origin/master master
+
+将本地分支和远程分支关联起来
