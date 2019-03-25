@@ -1,0 +1,21 @@
+在第一台虚拟机上，部署两个redis主实例+两个redis从实例，模拟一个机房的情况
+在第二台虚拟机上，部署两个redis从实例，挂载到第一台虚拟机的redis从实例上; 再部署两个redis从实例，挂载到第二台虚拟机的从实例上
+
+ps -ef | grep nutcracker
+
+slaveof no one
+
+tar -zxvf redis-2.8.19.tar.gz 
+cd redis-2.8.19
+make
+
+master01.conf
+master02.conf
+slave01.conf
+slave02.conf
+
+nohup src/redis-server  ./redis.conf &  
+
+src/redis-cli -p 6379  
+
+slaveof

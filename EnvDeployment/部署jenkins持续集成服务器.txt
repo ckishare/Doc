@@ -1,0 +1,34 @@
+
+上传到github上面去，然后部署jenkins持续集成服务器，在jenkins上配置自动化部署的脚本
+
+每次部署，都是在jenkins上执行构建，jenkins自动从github上面拉取代码，用maven打包，打成jar包，创建一个docker镜像，通过docker容器来部署spring cloud微服务
+
+然后就可以通过这种自动化流水线的方式部署所有的微服务
+
+所有的微服务通过这种方式部署好了之后，可以跟我们的虚拟机中的类生产环境打通，mysql，redis，rabbitmq，全部都用虚拟机中的生产环境
+
+相当于是我们修改商品数据，那个数据直接会进入各个机房的redis从集群
+
+我们在nginx上访问，不就可以从自己本机房的redis从集群中获取数据了么，数据直连服务都把多级缓存打通了
+
+再装一个2g的虚拟机，用centos 7，java 8
+
+http://updates.jenkins-ci.org/download/war/
+
+2.78
+
+将jenkins.war放到/usr/local中
+
+执行java -jar httpPort=8080 jenkins.war，启动jenkins服务器
+
+访问8080端口，可以看到jenkins的界面，需要输入秘钥
+
+在控制台可以找到秘钥，也可以再/root/.jenkins/secrets/initialAdminPassword中找到
+
+复制秘钥，进入界面
+
+install suggested plugins，安装推荐的插件
+
+创建一个管理员账户，save and finish
+
+2310879776

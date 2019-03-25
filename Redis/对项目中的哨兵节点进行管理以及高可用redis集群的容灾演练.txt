@@ -1,0 +1,68 @@
+
+1、哨兵节点的增加和删除
+
+增加sentinal，会自动发现
+
+删除sentinal的步骤
+
+（1）停止sentinal进程
+（2）SENTINEL RESET *，在所有sentinal上执行，清理所有的master状态
+（3）SENTINEL MASTER mastername，在所有sentinal上执行，查看所有sentinal对数量是否达成了一致
+
+2、slave的永久下线
+
+让master摘除某个已经下线的slave：SENTINEL RESET mastername，在所有的哨兵上面执行
+
+3、slave切换为Master的优先级
+
+slave->master选举优先级：slave-priority，值越小优先级越高
+
+4、基于哨兵集群架构下的安全认证
+
+每个slave都有可能切换成master，所以每个实例都要配置两个指令
+
+master上启用安全认证，requirers
+master连接口令，masterauth
+
+sentinal，sentinel auth-pass <master-group-name> <pass>
+
+5、容灾演练
+
+通过哨兵看一下当前的master：SENTINEL get-master-addr-by-name mymaster
+
+把master节点kill -9掉，pid文件也删除掉
+
+查看sentinal的日志，是否出现+sdown字样，识别出了master的宕机问题; 然后出现+odown字样，就是指定的quorum哨兵数量，都认为master宕机了
+
+（1）三个哨兵进程都认为master是sdown了
+（2）超过quorum指定的哨兵进程都认为sdown之后，就变为odown
+（3）哨兵1是被选举为要执行后续的主备切换的那个哨兵
+（4）哨兵1去新的master（slave）获取了一个新的config version
+（5）尝试执行failover
+（6）投票选举出一个slave区切换成master，每隔哨兵都会执行一次投票
+（7）让salve，slaveof noone，不让它去做任何节点的slave了; 把slave提拔成master; 旧的master认为不再是master了
+（8）哨兵就自动认为之前的187:6379变成了slave了，19:6379变成了master了
+（9）哨兵去探查了一下187:6379这个salve的状态，认为它sdown了
+
+所有哨兵选举出来一个，来执行主备切换操作
+
+如果哨兵的majority都存活着，那么就会执行主备切换操作
+
+再通过哨兵看一下master：SENTINEL get-master-addr-by-name mymaster
+
+尝试连接一下新的master
+
+故障恢复，再将旧的master重新启动，查看是否被哨兵自动切换成slave节点
+
+（1）手动杀掉master
+（2）哨兵能否执行主备切换，将slave切换为master
+（3）哨兵完成主备切换后，新的master能否使用
+（4）故障恢复，将旧的master重新启动
+（5）哨兵能否自动将旧的master变为slave，挂接到新的master上面去，而且也是可以使用的
+
+6、哨兵的生产环境部署
+
+daemonize yes
+logfile /var/log/sentinal/5000
+
+mkdir -p /var/log/sentinal/5000

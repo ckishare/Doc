@@ -1,0 +1,90 @@
+zookeeper + kafka的集群，都是三节点
+
+1、zookeeper集群搭建
+
+对zookeeper-3.4.5.tar.gz进行解压缩：tar -zxvf zookeeper-3.4.5.tar.gz。
+对zookeeper目录进行重命名：mv zookeeper-3.4.5 zk
+
+配置zookeeper相关的环境变量
+vi ~/.bashrc
+export ZOOKEEPER_HOME=/ishare/software/zookeeper/zk
+export PATH=$ZOOKEEPER_HOME/bin
+source ~/.bashrc
+
+cd zk/conf
+cp zoo_sample.cfg zoo.cfg
+
+vi zoo.cfg
+修改：dataDir=/ishare/software/zookeeper/zk/data
+新增：
+server.0=eshop-cache01:2888:3888	
+server.1=eshop-cache02:2888:3888
+server.2=eshop-cache03:2888:3888
+
+cd zk
+mkdir data
+cd data
+
+vi myid
+0
+
+在另外两个节点上按照上述步骤配置ZooKeeper，使用scp将zk和.bashrc拷贝到eshop-cache02和eshop-cache03上即可。唯一的区别是标识号分别设置为1和2。
+
+分别在三台机器上执行：zkServer.sh start。
+检查ZooKeeper状态：zkServer.sh status，应该是一个leader，两个follower
+jps：检查三个节点是否都有QuromPeerMain进程
+
+2、kafka集群搭建
+
+对scala-2.11.4.tgz进行解压缩：tar -zxvf scala-2.11.4.tgz
+对scala目录进行重命名：mv scala-2.11.4 scala
+
+配置scala相关的环境变量
+vi ~/.bashrc
+export SCALA_HOME=/ishare/software/scala/scala
+export PATH=$SCALA_HOME/bin
+source ~/.bashrc
+
+查看scala是否安装成功：scala -version
+
+对kafka_2.9.2-0.8.1.tgz进行解压缩：tar -zxvf kafka_2.9.2-0.8.1.tgz
+对kafka目录进行改名：mv kafka_2.9.2-0.8.1 kafka
+
+配置kafka
+vi /usr/local/kafka/config/server.properties
+broker.id：依次增长的整数，0、1、2，集群中Broker的唯一id
+zookeeper.connect=192.168.100.110:2181,192.168.100.111:2181,192.168.100.112:2181
+
+安装slf4j
+将课程提供的slf4j-1.7.6.zip上传到/usr/local目录下
+unzip slf4j-1.7.6.zip
+把slf4j中的slf4j-nop-1.7.6.jar复制到kafka的libs目录下面
+
+解决kafka Unrecognized VM option 'UseCompressedOops'问题
+
+vi /usr/local/kafka/bin/kafka-run-class.sh 
+
+if [ -z "$KAFKA_JVM_PERFORMANCE_OPTS" ]; then
+  KAFKA_JVM_PERFORMANCE_OPTS="-server  -XX:+UseCompressedOops -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -XX:+CMSScavengeBeforeRemark -XX:+DisableExplicitGC -Djava.awt.headless=true"
+fi
+
+去掉-XX:+UseCompressedOops即可
+
+按照上述步骤在另外两台机器分别安装kafka。用scp把kafka拷贝到其他机器即可。
+唯一区别的，就是server.properties中的broker.id，要设置为1和2
+
+在三台机器上的kafka目录下，分别执行以下命令：nohup bin/kafka-server-start.sh config/server.properties &
+
+使用jps检查启动是否成功
+
+使用基本命令检查kafka是否搭建成功
+
+创建测试topic
+/ishare/software/kafka/kafka/bin/kafka-topics.sh --zookeeper 192.168.100.110:2181,192.168.100.111:2181,192.168.100.112:2181 --topic test --replication-factor 1 --partitions 1 --create
+
+创建生产者
+/ishare/software/kafka/kafka/bin/kafka-console-producer.sh --broker-list 192.168.100.110:9092,192.168.100.111:9092,192.168.100.112:9092 --topic cache-message
+
+创建消费者
+/ishare/software/kafka/kafka/bin/kafka-console-consumer.sh --zookeeper 192.168.100.110:2181,192.168.100.111:2181,192.168.100.112:2181 --topic cache-message --from-beginning
+

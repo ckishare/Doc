@@ -1,0 +1,51 @@
+
+1、初步安装和启动docker
+
+yum update -y
+
+yum install -y yum-utils
+
+yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+
+yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+
+yum -y install docker-ce
+
+systemctl start docker
+
+2、设置镜像
+
+vi /etc/docker/daemon.json
+
+{
+  "registry-mirrors": ["https://mc5l8ut1.mirror.aliyuncs.com"]
+}
+
+3、开放管理端口映射
+
+vi /lib/systemd/system/docker.service
+
+将第11行的ExecStart=/usr/bin/dockerd，替换为：
+
+ExecStart=/usr/bin/dockerd -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock -H tcp://0.0.0.0:7654
+
+2375是管理端口，7654是备用端口
+
+在~/.bashrc中写入docker管理端口
+
+export DOCKER_HOST=tcp://0.0.0.0:2375
+
+source ~/.bashrc
+
+4、重启docker
+
+systemctl daemon-reload && service docker restart
+
+5、测试docker是否正常安装和运行
+
+docker run hello-world
+
+Hello from Docker!
+This message shows that your installation appears to be working correctly.
+
+2310879776

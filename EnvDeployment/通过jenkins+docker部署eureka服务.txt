@@ -1,0 +1,57 @@
+
+1、新建一个任务
+
+2、构建一个自由风格的软件项目
+
+3、配置Github，包括github地址，用户名和密码，分支
+
+4、配置构建环境
+
+增加构建步骤 -> invoker top-level-Maven targets
+
+Maven version: maven3.5.0
+Goals: clean package
+POM: pom.xml
+
+5、增加构建步骤 -> execute shell
+
+#!/bin/bash
+REGISTRY_URL=192.168.189.54:2375
+WORK_DIR=/root/work_build
+PROJECT_NAME=eureka-server
+PROJECT_VERSION=0.0.1-SNAPSHOT
+if [ ! -e ${WORK_DIR}/${PROJECT_NAME} ] && [ ! -d ${WORK_DIR}/${PROJECT_NAME} ]; then
+mkdir -p ${WORK_DIR}/${PROJECT_NAME}
+echo "Create Dir: ${WORK_DIR}/${PROJECT_NAME}"
+fi
+if [ -e ${WORK_DIR}/${PROJECT_NAME}/Dockerfile ]; then
+rm -rf ${WORK_DIR}/${PROJECT_NAME}/Dockerfile
+echo "Remove File: ${WORK_DIR}/${PROJECT_NAME}/Dockerfile"
+fi
+cp /root/.jenkins/workspace/eureka-server/Dockerfile ${WORK_DIR}/${PROJECT_NAME}/
+cp /root/.jenkins/workspace/eureka-server/target/*.jar ${WORK_DIR}/${PROJECT_NAME}/
+cd ${WORK_DIR}/${PROJECT_NAME}/
+docker build -t ${REGISTRY_URL}/eshop-detail/${PROJECT_NAME}:${PROJECT_VERSION} .
+docker push ${REGISTRY_URL}/eshop-detail/${PROJECT_NAME}:${PROJECT_VERSION}
+if docker ps -a | grep ${PROJECT_NAME}; then
+docker rm -f ${PROJECT_NAME}
+echo "Remove Docker Container: ${PROJECT_NAME}"
+fi
+docker run -d -p 8761:8761 --name ${PROJECT_NAME} ${REGISTRY_URL}/eshop-detail/${PROJECT_NAME}:${PROJECT_VERSION}
+
+6、执行一些修改
+
+（1）修改1：在系统配置中设置maven，然后在配置中选择自己配置的maven版本，解决cannot run mvn program的错误
+
+（2）修改2：编写DockerFile
+
+FROM frolvlad/alpine-oraclejdk8:slim
+VOLUME /tmp
+ADD eureka-server-0.0.1-SNAPSHOT.jar app.jar
+#RUN bash -c 'touch /app.jar'
+ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
+EXPOSE 8761
+
+7、执行构建
+
+8、访问http://192.168.31.253:8761/，可以看到eureka-server的页面

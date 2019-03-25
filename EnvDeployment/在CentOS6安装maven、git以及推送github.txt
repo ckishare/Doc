@@ -1,0 +1,36 @@
+
+1、安装maven
+
+wget http://mirror.bit.edu.cn/apache/maven/maven-3/3.5.0/binaries/apache-maven-3.5.0-bin.tar.gz
+
+tar -zxvf apache-maven-3.5.0-bin.tar.gz
+
+vi ~/.bashrc
+
+export  MAVEN_HOME=/usr/local/apache-maven-3.6.0
+export PATH=$PATH:$MAVEN_HOME/bin
+
+source ~/.bashrc
+
+mvn -version
+
+cd /usr/local/apache-maven-3.6.0/conf
+
+vi settings.xml
+
+<mirror>
+	<id>nexus-aliyun</id>
+	<mirrorOf>*</mirrorOf>
+	<name>Nexus aliyun</name>
+	<url>http://maven.aliyun.com/nexus/content/groups/public</url>
+</mirror>
+
+2、安装git
+
+yum install -y git
+
+git --version
+
+3、修改课程中的所有服务的配置为基于虚拟机中的生产环境
+
+4、将代码推送到github中

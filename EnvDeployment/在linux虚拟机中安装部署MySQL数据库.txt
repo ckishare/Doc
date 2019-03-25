@@ -1,0 +1,11 @@
+eshop-cache04
+
+先用yum安装mysql server
+
+yum install -y mysql-server
+
+service mysqld start
+chkconfig mysqld on
+
+yum install -y mysql-connector-java
+

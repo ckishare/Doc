@@ -1,0 +1,54 @@
+
+redis cluster搭建起来了
+
+redis cluster，提供了多个master，数据可以分布式存储在多个master上; 每个master都带着slave，自动就做读写分离; 每个master如果故障，那么久会自动将slave切换成master，高可用
+
+redis cluster的基本功能，来测试一下
+
+1、实验多master写入 -> 海量数据的分布式存储
+
+你在redis cluster写入数据的时候，其实是你可以将请求发送到任意一个master上去执行
+
+但是，每个master都会计算这个key对应的CRC16值，然后对16384个hashslot取模，找到key对应的hashslot，找到hashslot对应的master
+
+如果对应的master就在自己本地的话，set mykey1 v1，mykey1这个key对应的hashslot就在自己本地，那么自己就处理掉了
+
+但是如果计算出来的hashslot在其他master上，那么就会给客户端返回一个moved error，告诉你，你得到哪个master上去执行这条写入的命令
+
+什么叫做多master的写入，就是每条数据只能存在于一个master上，不同的master负责存储不同的数据，分布式的数据存储
+
+100w条数据，5个master，每个master就负责存储20w条数据，分布式数据存储
+
+jedis cluster api，就可以自动针对多个master进行写入和读取
+
+2、实验不同master各自的slave读取 -> 读写分离
+
+在这个redis cluster中，如果你要在slave读取数据，那么需要带上readonly指令，get mykey1
+
+redis-cli -c启动，就会自动进行各种底层的重定向的操作
+
+实验redis cluster的读写分离的时候，会发现有一定的限制性，默认情况下，redis cluster的核心的理念，主要是用slave做高可用的，每个master挂一两个slave，主要是做数据的热备，还有master故障时的主备切换，实现高可用的
+
+redis cluster默认是不支持slave节点读或者写的，跟我们手动基于replication搭建的主从架构不一样的
+
+slave node，readonly，get，这个时候才能在slave node进行读取
+
+默认的话就是读和写都到master上去执行的
+
+redis cluster的时候，就没有所谓的读写分离的概念了
+
+读写分离，是为了什么，主要是因为要建立一主多从的架构，才能横向任意扩展slave node去支撑更大的读吞吐量
+
+redis cluster的架构下，实际上本身master就是可以任意扩展的，你如果要支撑更大的读吞吐量，或者写吞吐量，或者数据量，都可以直接对master进行横向扩展就可以了
+
+也可以实现支撑更高的读吞吐的效果
+
+3、实验自动故障切换 -> 高可用性
+
+redis-trib.rb check 192.168.31.187:7001
+
+比如把master1，187:7001，杀掉，看看它对应的19:7004能不能自动切换成master，可以自动切换
+
+切换成master后的19:7004，可以直接读取数据
+
+再试着把187:7001给重新启动，恢复过来，自动作为slave挂载到了19:7004上面去
