@@ -1,0 +1,2 @@
+netstat -aon|findstr "9090"
+taskkill /pid {pid}

@@ -1,0 +1,17 @@
+1、查看内核版本
+uname -a 查询Linux内核版本
+
+2、按照必要软件
+yum install -y gcc
+yum install -y gcc-c++ C++编译器
+yum install -y openssl openssl- devel 支持SSL协议、MD5/SHA1 等散列函数
+yum install -y pcre pcre-devel 正则表达式
+yum install -y zlib zlib-devel 压缩
+
+3、参数调优
+cat /etc/sysctl.conf 调整内核参数  sysctl -p 生效
+
+4、安装Nginx
+./configure -- make -- make install
+
+5、./configure --help 

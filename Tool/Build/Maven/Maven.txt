@@ -1,0 +1,11 @@
+mvn install:install-file -Dfile=D:\YC-Insure\jar\ojdbc6-11.2.0.3.jar -DgroupId=com.oracle -DartifactId=ojdbc6 -Dversion=11.2.0.3 -Dpackaging=jar
+
+mvn clean compile package -DskipTests
+
+mvn install:install-file -Dfile=/ciapp/jar/ojdbc6-11.2.0.1.0.jar -DgroupId=com.oracle -DartifactId=ojdbc6 -Dversion=11.2.0.1.0 -Dpackaging=jar
+
+String reqJson = "{\"COrderCde\": \"1557746367305\", \"COprCde\": \"109000320\",\"CDataSrc\": \"smartLink\"}";
+
+
+mvn clean package -U -DskipTests -P  ${profiles.active}
+mvn clean package -Pprod
