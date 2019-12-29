@@ -1,0 +1,36 @@
+server:
+  #服务端口
+  port: 8003
+spring:
+  application:
+    #应用名称
+    name: spring-cloud-eureka-server
+eureka:
+  server:
+    #关闭自我保护【用于本地测试时配置-快速剔除失效服务】
+    enable-self-preservation: false
+    #检查失效服务间隔【用于本地测试时配置-快速剔除失效服务】
+    eviction-interval-timer-in-ms: 9000
+  instance:
+    #实例主机名（建议使用IP）
+    hostname: 47.100.57.32
+    #自定义实例ID（默认为 主机名:应用名:端口号）
+    instance-id: ${eureka.instance.hostname}:${server.port}
+  client:
+    #非集群服务配置，不将自己当客户端注册到自己
+    register-with-eureka: true
+    #非集群服务配置，不从服务端拉取服务列表
+    fetch-registry: true
+    #指定eureka集群所有服务地址，逗号分隔
+    #如果当前服务是eureka服务端，当前服务地址也要包含在内，服务地址结构：http://[hostname]:[port]/eureka/
+    #其中hostname建议最好与配置中的eureka.instance.hostname对应，因为服务端会根据hostname从service-url中区分
+    #出本机服务url和集群其它伙伴服务url，如果不对应，会将自身也当成伙伴服务，伙伴服务列表在eureka主页上
+    #DS Replicas部分展示
+    service-url:
+      defaultZone: http://192.168.1.8:8001/eureka/,http://111.229.5.188:8002/eureka/,http://47.100.57.32:8003/eureka/
+management:
+  endpoints:
+    web:
+      exposure:
+        #actuator监控中心，开放所有权限
+        include: '*'
