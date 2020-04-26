@@ -1,8 +1,8 @@
--- ¿ÕÖµÅÅĞò  nulls first
+-- ç©ºå€¼æ’åº  nulls first
 select ename, sal, comm from emp order by comm desc nulls first;
 select ename, sal, comm from emp order by comm desc nulls last;
 
--- case ±í´ïÊ½
+-- case è¡¨è¾¾å¼
 select ename,
        sal,
        job,
@@ -16,13 +16,13 @@ select ename,
   from emp
  order by 5
  
--- ¶Ôº¬ÓĞ×ÖÄ¸ºÍÊı×ÖµÄÁĞÅÅĞò
+-- å¯¹å«æœ‰å­—æ¯å’Œæ•°å­—çš„åˆ—æ’åº
 create view V1
 as
 select ename||' '||deptno as data
 from emp;
 
--- °´ÕÕDEPTNOÅÅĞò
+-- æŒ‰ç…§DEPTNOæ’åº
 select data
   from V1
  order by replace(data,
@@ -30,11 +30,17 @@ select data
                           '#',
                           ''),
                   '');
--- °´ÕÕENAMEÅÅĞò
+-- æŒ‰ç…§ENAMEæ’åº
 select data
   from V1
  order by replace(translate(data, '0123456789', '##########'), '#', '');
 
 select * from V;
+
+
+
+
+
+
  
 

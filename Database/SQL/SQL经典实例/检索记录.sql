@@ -9,3 +9,13 @@ select case
           '0'
        end
   from emp
+
+
+
+
+
+
+
+
+
+
