@@ -44,3 +44,16 @@ select 'alter table ' || table_name || ' disable constraint ' ||
   from user_constraints
  where constraint_type = 'R';  -- 禁用所有表的外键约束
 
+-- 7、描述Oracle数据字典视图
+select table_name, comments
+from dictionary
+order by table_name;
+
+select column_name, comments
+from dict_columns
+where table_name = 'ALL_TAB_COLUMNS';
+
+SELECT * FROM user_objects; -- 查询数据库的对象
+SELECT * FROM user_tab_comments; -- 查询表的注释
+SELECT * FROM user_col_comments; -- 查询列的注释
+SELECT * FROM user_constraints -- 查询约束所有约束信息
