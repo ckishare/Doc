@@ -91,4 +91,5 @@ when not matched then
     (ec.empno, ec.ename, ec.deptno, ec.comm)
   values
     (emp.empno, emp.ename, emp.deptno, emp.comm);
-
+    
+select * from emp;
