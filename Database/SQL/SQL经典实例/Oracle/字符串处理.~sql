@@ -81,9 +81,11 @@ select data
 
 -- 9、创建分割列表
 /*
-  connect by主要用于父子，祖孙，上下级等层级关系的查询
-  start with: 指定起始节点的条件
-  prior: 查询父行的限定符
+  connect by 连接条件，目的就是给出父子之间的关系是什么，根据这个关系进行递归查询
+  start with: 根节点的限定条件，当然也可以放宽权限，以获得多个根节点，也就是获取多个树
+  prior: 有两种写法
+         connect by prior dept_id=par_dept_id  采用自上而下的搜索方式（先找父节点然后找子节点）
+         connect by dept_id=prior par_dept_id  先找叶子节点然后找父节点
   level: level伪列,表示层级，值越小层级越高，level=1为层级最高节点
 */
 ---------------------------------------------------------------------------
@@ -162,3 +164,34 @@ select substr(emps,
 -- 去掉每列的逗号之后转换为数值
 
 -- 11、按字母表顺序排列字符
+/*
+   sys_connect_by_path函数求父节点到子节点路径
+  可以把一个父节点下的所有节点通过某个字符区分，然后链接在一个列中显示
+*/
+select old_name, new_name
+  from (select old_name, replace(sys_connect_by_path(c, ' '), ' ') new_name
+          from (select e.ename old_name,
+                       row_number() over(partition by e.ename order by substr(e.ename, iter.pos, 1)) rn,
+                       substr(e.ename, iter.pos, 1) c
+                  from emp e, (select rownum pos from emp) iter
+                 where iter.pos <= length(e.ename)
+                 order by 1) x
+         start with rn = 1
+        connect by prior rn = rn - 1
+               and prior old_name = old_name)
+ where length(old_name) = length(new_name); -- 过滤条件，对所有返回的记录进行过滤
+ 
+-- rn = 1 从1开始
+-- 条件 rn = rn - 1 > 1 = rn -1 > rn = 2 > 下次找的就是rn = 2 的
+
+-- 分析过程
+-- 提取出每个名字的字符，并按照字母表顺序排列好
+select e.ename old_name,
+       row_number() over(partition by e.ename order by substr(e.ename, iter.pos, 1)) rn,
+       substr(e.ename, iter.pos, 1) c
+  from emp e, (select rownum pos from emp) iter
+ where iter.pos <= length(e.ename);
+
+-- 提取出排好序的字符并重建每个名字
+-- 使用 SYS_CONNECT_BY_PATH 函数来完成，它把所有的字符按顺序串接起来
+

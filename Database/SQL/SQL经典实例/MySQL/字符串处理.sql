@@ -83,5 +83,27 @@ FROM
   emp 
 GROUP BY deptno; 
 
+-- 4、按字母表顺序排列字符
+/*
+   内嵌视图 ITER 用于遍历字符串。其余的工作都交由 GROUP_CONCAT 函数完成
+   通过指定排序方式， GROUP_CONCAT 函数不仅能串接每个字母，还能按照字母表顺序对它们进行排序
+*/
+SELECT 
+  ename,
+  GROUP_CONCAT(c 
+    ORDER BY c SEPARATOR '') 
+FROM
+  (SELECT 
+    ename,
+    SUBSTR(a.ename, iter.pos, 1) c 
+  FROM
+    emp a,
+    (SELECT 
+      id pos 
+    FROM
+      t10) iter 
+  WHERE iter.pos <= LENGTH(a.ename)) X
+GROUP BY ename;
+
 
 
