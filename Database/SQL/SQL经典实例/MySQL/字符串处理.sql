@@ -105,5 +105,33 @@ FROM
   WHERE iter.pos <= LENGTH(a.ename)) X
 GROUP BY ename;
 
+-- 5、识别字符串里的数字字符
+create view V3 as
+     select concat(
+              substr(ename,1,2),
+              replace(cast(deptno as char(4)),' ',''),
+              substr(ename,3,2)
+            ) as mixed
+       from emp
+      where deptno = 10
+      union all
+     select replace(cast(empno as char(4)), ' ', '')
+       from emp where deptno = 20
+      union all
+select ename from emp where deptno = 30;
+
+
+select cast(group_concat(c order by pos separator '') as unsigned) as MIXED1
+
+from (select v.mixed, iter.pos, substr(v.mixed, iter.pos, 1) as c
+      from V3 v,
+           (select id pos from t10) iter
+      where iter.pos <= length(v.mixed)
+        and ascii(substr(v.mixed, iter.pos, 1)) between 48 and 57)y
+
+
+group by mixed
+order by 1;
+
 
 

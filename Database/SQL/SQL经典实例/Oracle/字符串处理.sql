@@ -195,3 +195,53 @@ select e.ename old_name,
 -- 提取出排好序的字符并重建每个名字
 -- 使用 SYS_CONNECT_BY_PATH 函数来完成，它把所有的字符按顺序串接起来
 
+-- 12、识别字符串里的数字字符
+create view V4 as
+  select replace(mixed, ' ', '') as mixed
+  from (select substr(ename, 1, 2) ||
+               deptno ||
+               substr(ename, 3, 2) as mixed
+        from emp
+        where deptno = 10
+        union all
+        select cast(empno as char(4)) as mixed from emp where deptno = 20
+        union all
+        select ename as mixed from emp where deptno = 30)x;
+
+select * from v4;
+
+
+-- 数字 > 非数字 > 数字
+select to_number(case
+                   when replace(translate(mixed, '0123456789', '9999999999'), '9')
+        is not null
+                           then replace(
+                                  translate(mixed,
+                                            replace(
+                                              translate(mixed, '0123456789', '9999999999'), '9'),
+                                            rpad('#', length(mixed), '#')), '#')
+                   else mixed
+                     end
+           ) mixed
+from V4
+where instr(translate(mixed, '0123456789', '9999999999'), '9') > 0;
+
+-- 提取第n个分割子字符串
+create view V5 as
+  select 'mo,larry,curly' as name
+  from t1
+  union all
+  select 'tina,gina,jaunita,regina,leena' as name
+  from t1;
+
+select * from v5;
+
+select sub
+from (select iter.pos, src.name, substr(src.name,
+                                        instr(src.name, ',', 1, iter.pos) + 1,
+                                        instr(src.name, ',', 1, iter.pos + 1) - instr(src.name, ',', 1, iter.pos) - 1) sub
+      from (select ',' || name || ',' as name from V5) src,
+           (select rownum pos from emp) iter
+
+      where iter.pos < length(src.name) - length(replace(src.name, ',')))
+where pos = 2;
