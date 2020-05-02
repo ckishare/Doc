@@ -236,6 +236,7 @@ create view V5 as
 
 select * from v5;
 
+-- 先找再截取
 select sub
 from (select iter.pos, src.name, substr(src.name,
                                         instr(src.name, ',', 1, iter.pos) + 1,
@@ -245,3 +246,14 @@ from (select iter.pos, src.name, substr(src.name,
 
       where iter.pos < length(src.name) - length(replace(src.name, ',')))
 where pos = 2;
+
+
+-- 解析IP地址
+select ip,
+       substr(ip, 1, instr(ip, '.') - 1) a,
+       substr(ip, instr(ip, '.') + 1,
+              instr(ip, '.', 1, 2) - instr(ip, '.') - 1) b,
+       substr(ip, instr(ip, '.', 1, 2) + 1,
+              instr(ip, '.', 1, 3) - instr(ip, '.', 1, 2) - 1) c,
+       substr(ip, instr(ip, '.', 1, 3) + 1) d
+from (select '92.111.0.2' as ip from t1);

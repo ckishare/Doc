@@ -134,4 +134,9 @@ group by mixed
 order by 1;
 
 
-
+-- 6、解析IP地址
+select substring_index(substring_index(y.ip, '.', 1), '.', -1) a,
+       substring_index(substring_index(y.ip, '.', 2), '.', -1) b,
+       substring_index(substring_index(y.ip, '.', 3), '.', -1) c,
+       substring_index(substring_index(y.ip, '.', 4), '.', -1) d
+from (select '92.111.0.2' as ip from t1) y;
