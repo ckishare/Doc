@@ -51,3 +51,31 @@ select x.yr, coalesce(cnt, 0) cnt
               group by to_number(to_char(hiredate, 'YYYY'))) y
     on (x.yr = y.yr);
 
+--  5、生成连续的数值
+-- 方案一
+/*
+  把 CONNECT BY 子查询放进了 WITH 子句
+  WHERE 子句中断之前，行数据会被连 续生成出来
+  Oracle 会自动递增伪列 LEVEL 的值，我们不必再做什么
+ */
+with x
+    as (select level id from dual connect by level <= 10)
+select *
+from x;
+
+-- 方案二
+/*
+  MODEL 子句不仅能让我们像访问数组一样访问行数据，还允许我们方便地创建新的行或 返回表里不存在的行
+  IDX 是数组下标(数组里某个特定值的位置)
+  ARRAY(别名 ID)是行数据构成的“数组”
+  第一行的默认值是 1，可以通过 ARRAY[0] 来访 问
+  Oracle 提供了 ITERATION_NUMBER 函数，以便我们知道迭代次数
+  本解决方案迭代了 10 次，因而 ITERATION_NUMBER 从 0 增加到了 9
+ */
+select array id
+from dual
+    model
+    dimension by (0 idx)
+    measures (1 array)
+    rules iterate (10) (
+      array[iteration_number] = iteration_number + 1);
