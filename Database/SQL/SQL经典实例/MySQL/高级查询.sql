@@ -23,7 +23,23 @@ FROM dept d
                              AND (e.deptno = 10 OR e.deptno = 20))
 ORDER BY 2;
 
--- 4、提取最靠前的N行记录
+-- 4、找出最大和最小的记录
+select ename
+from emp
+where sal in ((select min(sal) from emp), (select max(sal) from emp));
+
+-- 5、查询未来的行
+-- 入职比他晚、且工资更高的员工当中最早入职的那个人的入职日期
+-- 入职比他晚的员工当中最早入职的那个人的入职日期。
+select ename, sal, hiredate
+from (select a.ename,
+             a.sal,
+             a.hiredate,
+             (select min(hiredate) from emp b where b.hiredate > a.hiredate
+                                                and b.sal > a.sal)           as next_sal_grtr,
+             (select min(hiredate) from emp b where b.hiredate > a.hiredate) as next_hire
+      from emp a) x
+where next_sal_grtr = next_hire;
 
 
 

@@ -72,5 +72,33 @@ select ename, sal
  where dr <= 5;
 
 -- 6、找出最大和最小的记录
+select ename
+from (select ename, sal, min(sal)over () min_sal, max(sal)over () max_sal from emp)x
+where sal in (min_sal, max_sal);
 
+-- 7、查询未来的行
+-- 如果有员工的工资低于紧随其后入职的同事，那么你希望把这些人找出来
+select ename, sal, hiredate
+from (select ename, sal, hiredate, lead(sal)over (order by hiredate) next_sal from emp)
+where sal < next_sal;
+
+-- 如果存在同一天入职的员工多于一个人的情况，则上述解决方案存在问题，因为lead over 默认往前看一行
+/*
+  关键在于找出从当前行到它应该与之比较的行之间的距离
+  如果有 5 个 重复行，那么它的第一行就需要跳过 5 行数据才能找到正确的 LEAD OVER 行
+  CNT 代表了他们的 HIREDATE 一共在多少行里出现过
+  RN 的 值代表了 DEPTNO 等于 10 的每一个员工的序号,该序号的生成按照 HIREDATE 分区，因此只 有那些含有重复 HIREDATE 的员工才可能有大于 1 的 RN 值
+  那么与下一个 HIREDATE 的距离就是重复项的总数减去 当前的序号再加 1，即“CNT-RN+1”
+ */
+select ename, sal, hiredate
+from (select ename, sal, hiredate, lead(sal, cnt - rn + 1)over (order by hiredate) next_sal
+      from (select ename,
+                   sal,
+                   hiredate,
+                   count(*)over (partition by hiredate)                    cnt,
+                   row_number()over (partition by hiredate order by empno) rn
+            from emp))
+where sal < next_sal;
+
+-- 8、行值轮换
 
