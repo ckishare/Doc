@@ -41,5 +41,15 @@ from (select a.ename,
       from emp a) x
 where next_sal_grtr = next_hire;
 
+-- 6、对结果排序
+select (select count(distinct b.sal) from emp b where b.sal <= a.sal) as rnk, a.sal
+from emp a;
+
+-- 7、删除重复项
+select distinct job from emp;
+
+-- 8、查找骑士值
+
+-- 9、生成简单的预测
 
 

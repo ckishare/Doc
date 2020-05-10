@@ -100,5 +100,14 @@ from (select ename, sal, hiredate, lead(sal, cnt - rn + 1)over (order by hiredat
             from emp))
 where sal < next_sal;
 
--- 8、行值轮换
+-- 8、对结果排序
+select dense_rank() over (order by sal) rnk, sal
+from emp;
 
+--9、删除重复项
+select job, rn
+from (select job, row_number()over (partition by job order by job) rn from emp)x;
+
+-- 10、查找骑士值
+
+-- 11、生成简单的预测
