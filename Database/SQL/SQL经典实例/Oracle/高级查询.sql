@@ -109,5 +109,5 @@ select job, rn
 from (select job, row_number()over (partition by job order by job) rn from emp)x;
 
 -- 10、查找骑士值
-
--- 11、生成简单的预测
+--
+-- -- 11、生成简单的预测
