@@ -194,8 +194,8 @@ SELECT deptno, ename, job, sal
     WHEN sal = min_by_job THEN 'LOW SAL IN JOB'
   END AS job_status
 FROM (
-  SELECT deptno, ename, job, sal  -- 使用窗口函数 MAX OVER 和 MIN OVER 找出每个 DEPTNO 和 JOB 对应的最高和最低的工资
-    , MAX(sal) OVER (PARTITION BY deptno ) AS max_by_dept, MAX(sal) OVER (PARTITION BY job ) AS max_by_job
+  SELECT deptno, ename, job, sal  , -- 使用窗口函数 MAX OVER 和 MIN OVER 找出每个 DEPTNO 和 JOB 对应的最高和最低的工资
+     MAX(sal) OVER (PARTITION BY deptno ) AS max_by_dept, MAX(sal) OVER (PARTITION BY job ) AS max_by_job
     , MIN(sal) OVER (PARTITION BY deptno ) AS min_by_dept, MIN(sal) OVER (PARTITION BY job ) AS min_by_job
   FROM emp
 ) emp_sals
@@ -239,11 +239,92 @@ select deptno,
  group by cube(deptno,job)
  order by grouping(job),grouping(deptno);
 
--- 14、
+-- 14、识别非小计行
+/*
+  出现结果分为四种情况： 00 01 10 11
+ */
+-- 你已经知道如何使用 GROUP BY 子句的 CUBE 扩展语法生成报表，
+-- 并且你需要知道如何区分 哪些行是由普通的 GROUP BY 子句产生的，哪些行是由 CUBE 或 ROLLUP 产生的
+select deptno, job, sum(sal) sal,
+       grouping(deptno) deptno_subtotals, grouping(job) job_subtotals -- 使用 GROUPING 函数判断哪些值是 CUBE 或 ROLLUP 的小计结果
+from emp
+group by cube (deptno, job);
 
 
+-- 15、使用case表达式标记行数据
+-- 把某列的值映射成一系列的“布尔”标志位
+select ename,
+       case
+         when job = 'CLERK'
+                 then 1
+         else 0
+           end      as is_clerk,
+       case
+         when job = 'SALESMAN'
+                 then 1
+         else 0 end as is_sales,
+       case
+         when job = 'MANAGER'
+                 then 1
+         else 0
+           end      as is_mgr,
+       case
+         when job = 'ANALYST'
+                 then 1
+         else 0
+           end      as is_analyst,
+       case
+         when job = 'PRESIDENT'
+                 then 1
+         else 0
+           end      as is_prez
+from EMP
+order by 2, 3, 4, 5, 6;
 
 
+-- 16、按照时间单位分组
+-- 以ID分组
+select ceil(trx_id / 5.0) as grp, min(trx_date) as trx_start, max(trx_date) as trx_end, sum(trx_cnt) as total
+from trx_log
+group by ceil(trx_id / 5.0);
 
+-- 以时间分组（5秒一组）
+select hr, grp, sum(trx_cnt) total
+from (select trx_date,
+             trx_cnt,
+             to_number(to_char(trx_date, 'hh24'))                                hr,
+             ceil(to_number(to_char(trx_date - 1 / 24 / 60 / 60, 'miss')) / 5.0) grp
+      from trx_log)x
+group by hr, grp;
 
+-- 17、多纬度聚合运算
+/*
+  你想同时进行不同维度的聚合运算
+  你希望得到一个结果集，其中包括每个员工的 名字、部门、他所在部门的员工总数(包括他自己)、和他做相同工作的员工总数(该合 计值中也包括他自己)
+  以及 EMP 表中的员工总人数
+ */
+select ename,
+       deptno,
+       count(*)over (partition by deptno) deptno_cnt,
+       job,
+       count(*)over (partition by job)    job_cnt,
+       count(*)over ()                    total
+from emp;
+
+-- 18、动态区间聚合运算
+/*
+  计算 EMP 表工资的动态合计。你希望把入职最早的员工的 HIREDATE 作为起始点，每隔 90 天计算一次工资合计值
+  你想调查一下在最早入职的员工 和最近入职的员工之间每隔 90 天工资的波动状况
+
+  在窗口或“帧”子句 里指定时间范围为 90 天，这样就能针对每个员工以及入职时间比他早 90 天以内的所有人 的工资执行合计计算
+
+  要了解查询语句中窗口子句的工作原理
+  首先，我们定义好的窗 口会按照 HIREDATE 对所有员工的工资进行排序,然后，调用聚合函数计算工资总额,具体的处理过程如下所示
+  (1) 评估最早入职的员工的工资。第一个员工入职之前不会有其他人已经入职，因而此时的 工资总额就是第一个员工的工资
+  (2)(按照 HIREDATE 的先后顺序)评估下一位员工的工资。该员工的工资会被计入动态工资 合计值，其他入职时间比他早、但相差 90 天以内的员工的工资也会被计入合计值。
+ */
+select hiredate, sal, sum(sal) over (order by hiredate
+range between 90 preceding
+and current row) spending_pattern
+from emp e;
 

@@ -61,6 +61,23 @@ SELECT deptno, job,
  FROM emp;
 
 
+-- 3、多维度聚合运算
+select e.ename,
+       e.deptno,
+       (select count(*) from emp d where d.deptno = e.deptno) as deptno_cnt,
+       job,
+       (select count(*) from emp d where d.job = e.job)       as job_cnt,
+       (select count(*) from emp)                             as total
+from emp e;
+
+-- 4、动态区间聚合运算
+select e.hiredate, e.sal, sum(d.sal) as spending_pattern
+from emp e,
+     emp d
+where d.hiredate
+          between e.hiredate - 90 and e.hiredate
+group by e.hiredate, e.sal
+order by 1;
 
 
 
