@@ -148,3 +148,102 @@ select deptno, lpad('*', count(*), '*') as cnt
 from emp
 group by deptno;
 
+-- 10、创建垂直直方图
+SELECT MAX(deptno_10) AS d10, MAX(deptno_20) AS d20
+  , MAX(deptno_30) AS d30
+FROM (
+  SELECT row_number() OVER (PARTITION BY deptno ORDER BY empno) AS rn
+    , CASE 
+      WHEN deptno = 10 THEN '*'
+      ELSE NULL
+    END AS deptno_10
+    , CASE 
+      WHEN deptno = 20 THEN '*'
+      ELSE NULL
+    END AS deptno_20
+    , CASE 
+      WHEN deptno = 30 THEN '*'
+      ELSE NULL
+    END AS deptno_30
+  FROM emp
+) x
+GROUP BY rn
+ORDER BY 1 DESC, 2 DESC, 3 DESC;
+
+-- 11、返回非分组列
+/*
+   使用场景：你正在执行 GROUP BY 查询，并希望通过 SELECT 列表返回一些列，但这些列却不会出现在 GROUP BY 子句里
+   
+   需求：你希望找出每个部门工资最高和最低的员工，同时也希望找出每个职位对应的工资最高和最低的员工
+   你想查看每个员工的名字、部门、职位以及工资
+*/
+
+-- 它会针对每个 ENAME 调用 MAX(SAL) 函数 > 找出了 EMP 表里每个 ENAME 对应的最高工资
+-- 我们需要能够查询到 ENAME 却不必把 ENAME放入 GROUP BY 子句的方法
+SELECT ename, MAX(sal)
+FROM emp
+GROUP BY ename;
+
+SELECT deptno, ename, job, sal
+  , CASE 
+    WHEN sal = max_by_dept THEN 'TOP SAL IN DEPT'
+    WHEN sal = min_by_dept THEN 'LOW SAL IN DEPT'
+  END AS dept_status
+  , CASE 
+    WHEN sal = max_by_job THEN 'TOP SAL IN JOB'
+    WHEN sal = min_by_job THEN 'LOW SAL IN JOB'
+  END AS job_status
+FROM (
+  SELECT deptno, ename, job, sal  -- 使用窗口函数 MAX OVER 和 MIN OVER 找出每个 DEPTNO 和 JOB 对应的最高和最低的工资
+    , MAX(sal) OVER (PARTITION BY deptno ) AS max_by_dept, MAX(sal) OVER (PARTITION BY job ) AS max_by_job
+    , MIN(sal) OVER (PARTITION BY deptno ) AS min_by_dept, MIN(sal) OVER (PARTITION BY job ) AS min_by_job
+  FROM emp
+) emp_sals
+WHERE sal IN (max_by_dept, max_by_job, min_by_dept, min_by_job);
+
+-- 12、计算简单的小计
+/*
+   指的是一种特殊的结果集，该结果集不仅包括某一列的聚合运算结果，也包括了整个表中该列的合计值
+   TOTAL 29025
+   
+   只使用group by子句和聚合函数是无法同时得出小计和合计的，想要同时得到，可以使用grouping运算符
+   
+   GROUPING函数可以接受一列，返回0或者1。如果列值为空，那么GROUPING()返回1；如果列值非空，那么返回0。
+   GROUPING只能在使用ROLLUP或CUBE的查询中使用。
+   当需要在返回空值的地方显示某个值时，GROUPING()就非常有用
+*/
+SELECT CASE grouping(job)
+		WHEN 0 THEN job
+		ELSE 'TOTAL'
+	END AS job, SUM(sal) AS sal
+FROM emp
+GROUP BY ROLLUP (job);
+
+-- 13、计算所有可能的表达式组合的小计
+/*
+   你想按照 DEPTNO 、 JOB 以及 JOB/DEPTNO 组合分别计算出工资合计值。同时，你也希望得到 EMP 表的工资总计
+   
+   使用group by cube(a,b)，则首先会对(a,b)进行group by，然后依次是(a)，(b)，
+   最后对全表进行group by 操作，一共是2^2=4次grouping
+*/
+select deptno,
+ job,
+ case grouping(deptno)||grouping(job)
+ when '00' then 'TOTAL BY DEPT AND JOB'
+ when '10' then 'TOTAL BY JOB'
+ when '01' then 'TOTAL BY DEPT'
+ when '11' then 'GRAND TOTAL FOR TABLE'
+ end category,
+ sum(sal) sal
+ from emp
+ group by cube(deptno,job)
+ order by grouping(job),grouping(deptno);
+
+-- 14、
+
+
+
+
+
+
+
