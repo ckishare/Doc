@@ -35,18 +35,7 @@ connect by prior empno = mgr;
 
 -- 5、确认叶子节点、分支节点和根节点
 -- 你想确定给定的一行数据是哪种类型的节点：叶子节点、分支节点还是根节点
-select ename,
-       connect_by_isleaf is_leaf,
-       (select count(*)
-          from emp e
-         where e.mgr = emp.empno
-           and emp.mgr is not null
-           and rownum = 1) is_branch,
-       decode(ename, connect_by_root(ename), 1, 0) is_root
-  from emp
- start with mgr is null
-connect by prior empno = mgr
- order by 4 desc, 3 desc;
+
 
 
 
