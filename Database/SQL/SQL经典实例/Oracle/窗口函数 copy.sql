@@ -53,6 +53,3 @@ select ename,
 
 
 
-
-
-
